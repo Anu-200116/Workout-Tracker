@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #1e1e2f; 
+            color: #fff; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: auto; 
+            background: #282a36; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            background: #44475a;
+            color: #fff;
+        }
+        th, td { 
+            border: 1px solid #6272a4; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #50fa7b; 
+            color: #282a36; 
+        }
+        .controls { 
+            margin-top: 10px; 
+        }
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            background-color: #ff79c6;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff92d0;
+        }
+        input[type="checkbox"] {
+            accent-color: #50fa7b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Workout Tracker</h2>
+        <input type="text" id="userName" placeholder="User Name">
+        <input type="text" id="workoutType" placeholder="Workout Type">
+        <input type="number" id="workoutMinutes" placeholder="Minutes">
+        <button onclick="addWorkout()">Add Workout</button>
+        
+        <div class="controls">
+            <input type="text" id="searchName" placeholder="Search by Name" onkeyup="searchByName()">
+            <select id="filterType" onchange="filterByType()">
+                <option value="">Select a workout</option>
+                <option value="Swimming">Swimming</option>
+                <option value="Strength">Strength Training</option>
+                <option value="Yoga">Yoga</option>
+                <option value="Cycling">Cycling</option>
+                <option value="Running">Running</option>
+            </select>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Workout Type</th>
+                    <th>Minutes</th>
+                </tr>
+            </thead>
+            <tbody id="workoutList"></tbody>
+        </table>
+        
+        <button onclick="prevPage()">Prev</button>
+        <button onclick="nextPage()">Next</button>
+        
+        <canvas id="workoutChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+        let workouts = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        function addWorkout() {
+            const name = document.getElementById('userName').value;
+            const type = document.getElementById('workoutType').value;
+            const minutes = document.getElementById('workoutMinutes').value;
+            if (name && type && minutes) {
+                workouts.push({ name, type, minutes: parseInt(minutes) });
+                updateWorkoutList();
+                updateChart();
+                updateFilterOptions();
+            }
+        }
+
+        function updateWorkoutList() {
+            const tbody = document.getElementById('workoutList');
+            tbody.innerHTML = '';
+            let filteredWorkouts = workouts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            filteredWorkouts.forEach(workout => {
+                let row = `<tr><td>${workout.name}</td><td>${workout.type}</td><td>${workout.minutes}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById('workoutChart').getContext('2d');
+            const types = [...new Set(workouts.map(w => w.type))];
+            const data = types.map(type => workouts.filter(w => w.type === type).reduce((sum, w) => sum + w.minutes, 0));
+
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: types,
+                    datasets: [{
+                        label: 'Workout Minutes',
+                        data: data,
+                        backgroundColor: ['#ff79c6', '#50fa7b', '#8be9fd', '#bd93f9'],
+                        borderColor: ['#ff92d0', '#69f0ae', '#a3ffff', '#caaaff'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
